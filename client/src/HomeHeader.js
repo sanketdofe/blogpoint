@@ -5,7 +5,7 @@ import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import SearchIcon from '@material-ui/icons/Search';
 import Typography from '@material-ui/core/Typography';
-
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
     toolbar: {
@@ -23,8 +23,15 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-function HomeHeader() {
+function HomeHeader(props) {
     const classes = useStyles();
+    const history = useHistory();
+
+    function handleClick(e){
+        if(!props.LoggedIn){
+            history.push('/login');
+        }
+    }
     return (
         <Fragment>
             <Toolbar className={classes.toolbar}>
@@ -39,7 +46,7 @@ function HomeHeader() {
                 <IconButton>
                     <SearchIcon />
                 </IconButton>
-                <Button className={classes.button} variant="outlined" size="small">Account</Button>
+                <Button className={classes.button} variant="outlined" onClick={handleClick} size="small">Account</Button>
             </Toolbar>
         </Fragment>
     );

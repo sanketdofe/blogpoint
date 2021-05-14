@@ -16,6 +16,19 @@ app.get("/", (req, res) => {
 });
 
 
+/////////////////////////////Add New User///////////////////////////////
+app.post("/api/adduser", (req, res) => {
+  console.log(req.body);
+  res.send("Success");
+});
+
+
+////////////////////////////Authenticate/////////////////////////////////
+app.post("/api/authenticate", (req, res) => {
+  console.log(req.body);
+  res.send("Success");
+});
+
 //////////////////////////////Port Setup////////////////////////////////
 app.listen(process.env.PORT || "5000", function(err) {
     if (err) {

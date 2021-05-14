@@ -41,11 +41,12 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Home() {
   const classes = useStyles();
+  let loggedIn = false;
   let blogtypes = [1, 2, 3, 4, 5, 6];
   let shortblogs = [1, 2, 3, 4, 5, 6];
   return (
     <Fragment>
-      <HomeHeader/>
+      <HomeHeader loggedIn={loggedIn}/>
       <Toolbar component="nav" variant="dense" className={classes.blogtypetoolbar}>
         {
           blogtypes.map((type) => (
