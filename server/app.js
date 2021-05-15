@@ -7,9 +7,10 @@ const saltRounds = 10;
 var jwt = require('jsonwebtoken');
 const app = express();
 
-app.use(express.json());
+app.use(express.json({limit: '5mb'}));
 app.use(
   express.urlencoded({
+    limit: '5mb',
     extended: true,
   })
 );
@@ -71,14 +72,14 @@ app.post("/api/authenticate", (req, res) => {
       bcrypt.compare(req.body.password, result.rows[0].password)
       .then(function(same) {
         if(same){
-          var token = jwt.sign({ id: result.rows[0].userid, email: result.rows[0].email}, process.env.secretkey, {
+          var token = jwt.sign({ userid: result.rows[0].userid, email: result.rows[0].email}, process.env.secretkey, {
             expiresIn: 1800
           });
           res.send({
             message: "Authentication Success",
             userid: result.rows[0].userid,
             name: result.rows[0].name,
-            accessToken: token
+            accesstoken: token
           });
         }
         else{
@@ -89,6 +90,36 @@ app.post("/api/authenticate", (req, res) => {
     }
   })
   .catch(error => {console.log(error)});
+});
+
+//////////////////////////////Add Blog//////////////////////////////////
+app.post("/api/addblog", (req, res) => {
+  // console.log(req.headers);
+  jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
+    if(err){
+      // console.log(err);
+      res.send(err);
+    }
+    else{
+      // console.log(decoded);
+      client.query("SELECT userid, title from public.blog WHERE title=$1", [req.body.title])
+      .then(result => {
+        if(result.rows.length !== 0){
+          res.send({message: "A blog with same title already exists"});
+        }
+        else{
+          client.query("INSERT INTO public.blog(userid, title, topic, description, body, image, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())", [decoded.userid, req.body.title, req.body.topic, req.body.description, req.body.body, req.body.image])
+          .then(result => {
+            // console.log(result);
+            res.send({message: "Blog added successfully"})
+          })
+          .catch(error => {console.log(error)});
+        }
+      })
+      .catch(error => {console.log(error)});
+    }
+  });
+  
 });
 
 //////////////////////////////Port Setup////////////////////////////////

@@ -68,7 +68,7 @@ export default function Home() {
   const [loggedIn, setLoggedIn] = React.useState(accesstoken !== null);
   useEffect(() => {
     setLoggedIn(accesstoken !== null);
-  });
+  }, [accesstoken]);
   let blogtypes = [1, 2, 3, 4, 5, 6];
   let shortblogs = [1, 2, 3, 4, 5, 6];
 
@@ -99,6 +99,7 @@ export default function Home() {
   return (
     <Fragment>
       <Toolbar className={classes.toolbar}>
+      <Button className={classes.button} onClick={() => history.push('/newblog')} size="small">Create Blog</Button>
         <Typography
             component="h2"
             variant="h3"
