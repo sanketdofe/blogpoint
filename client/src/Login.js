@@ -75,9 +75,16 @@ export default function Login() {
         }
         axios
         .post(serveraddress+"/api/adduser", state)
-        .then(() => {
-            console.log("success");
-            history.push('/');
+        .then((res) => {
+            if(res.data.message === "User with same email already exists"){
+                alert(res.data.message);
+                handleReset();
+            }
+            else if(res.data.message === "User Added Successfully"){
+                alert(res.data.message);
+                setTabactive(true);
+                handleReset();
+            }
           })
           .catch(err => {
             console.error(err);
@@ -98,9 +105,21 @@ export default function Login() {
         }
         axios
         .post(serveraddress+"/api/authenticate", data)
-        .then(() => {
-            console.log("success");
-            history.push('/');
+        .then((res) => {
+            console.log(res);
+            if(res.data.message === "No such User found. Please Register"){
+                alert(res.data.message);
+                setTabactive(false);
+            }
+            else if(res.data.message === "Wrong Password"){
+                alert(res.data.message);
+                handleReset();
+            }
+            else if(res.data.message === "Authentication Success"){
+                sessionStorage.setItem("accesstoken", res.data.accesstoken);
+                sessionStorage.setItem("name", res.data.name);
+                history.push('/');
+            }
           })
           .catch(err => {
             console.error(err);

@@ -1,6 +1,5 @@
-import React, { Fragment } from 'react';
+import React, { Fragment , useEffect} from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import HomeHeader from './HomeHeader';
 import Toolbar from '@material-ui/core/Toolbar';
 import Link from '@material-ui/core/Link';
 import Container from '@material-ui/core/Container';
@@ -11,8 +10,29 @@ import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
+import IconButton from '@material-ui/core/IconButton';
+import SearchIcon from '@material-ui/icons/Search';
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
+  toolbar: {
+    borderBottom: `1px solid ${theme.palette.divider}`,
+  },
+  toolbarTitle: {
+    flex: 1,
+    color: '#34656d',
+    fontWeight: 700,
+    fontFamily: 'KaushanScript-Regular'
+  },
+  button: {
+    backgroundColor: '#34656d',
+    color: "#FFFFFF",
+    margin: '0 5px'
+  },
+  accountbutton: {
+    color: "#34656d",
+    fontWeight: 600
+  },
   blogtype: {
     margin: '1%',
     color: '#34656d'
@@ -30,7 +50,7 @@ const useStyles = makeStyles((theme) => ({
     margin: '0.5rem',
     borderRadius: '0.25rem'
   },
-  button: {
+  cardbutton: {
     color: "#34656d"
   },
   image: {
@@ -41,12 +61,57 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Home() {
   const classes = useStyles();
-  let loggedIn = false;
+  const history = useHistory();
+
+  let accesstoken = sessionStorage.getItem("accesstoken");
+  let name = sessionStorage.getItem("name");
+  const [loggedIn, setLoggedIn] = React.useState(accesstoken !== null);
+  useEffect(() => {
+    setLoggedIn(accesstoken !== null);
+  });
   let blogtypes = [1, 2, 3, 4, 5, 6];
   let shortblogs = [1, 2, 3, 4, 5, 6];
+
+
+  function handleLoginButton(e){
+    history.push('/login');
+  }
+
+  function handleLogout(e){
+    sessionStorage.removeItem("accesstoken");
+    sessionStorage.removeItem("name");
+    setLoggedIn(accesstoken !== null);
+    history.push('/');
+  }
+
+  function handleAccountButton(e){
+    history.push('/');
+  }
+  
+
+  const loginbutton = <Button className={classes.button} variant="outlined" onClick={handleLoginButton} size="small">Login</Button>
+  const accountbutton = 
+    <div>
+      <Button className={classes.accountbutton} variant="" onClick={handleAccountButton} size="small">{name}</Button>
+      <Button className={classes.button} variant="outlined" onClick={handleLogout} size="small">Logout</Button>
+    </div>
+
   return (
     <Fragment>
-      <HomeHeader loggedIn={loggedIn}/>
+      <Toolbar className={classes.toolbar}>
+        <Typography
+            component="h2"
+            variant="h3"
+            align="center"
+            className={classes.toolbarTitle}
+        >
+            BlogPoint
+        </Typography>
+        <IconButton>
+            <SearchIcon />
+        </IconButton>
+        {loggedIn ? accountbutton: loginbutton}
+        </Toolbar>
       <Toolbar component="nav" variant="dense" className={classes.blogtypetoolbar}>
         {
           blogtypes.map((type) => (
@@ -82,7 +147,7 @@ export default function Home() {
                 </CardContent>
               </CardActionArea>
               <CardActions>
-                <Button size="small" className={classes.button}>
+                <Button size="small" className={classes.cardbutton}>
                   Read More
                 </Button>
               </CardActions>
