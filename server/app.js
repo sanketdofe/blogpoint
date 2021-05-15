@@ -122,11 +122,102 @@ app.post("/api/addblog", (req, res) => {
   
 });
 
+///////////////////////////Get User Details/////////////////////////////
+app.get('/api/getuser', (req, res) => {
+  jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
+    if(err){
+      // console.log(err);
+      res.send(err);
+    }
+    else{
+      // console.log(decoded);
+      client.query("SELECT name, email from public.user WHERE userid=$1", [decoded.userid])
+      .then(result => {
+        if(result.rows.length === 0){
+          res.send({message: "User Not found"});
+        }
+        else{
+          res.send({message: "User Found", ...result.rows[0]});
+        }
+      })
+      .catch(error => {console.log(error)});
+    }
+  });
+});
+
+
+///////////////////////////Update User Details//////////////////////////
+app.post("/api/updateuser", (req, res) => {
+  // console.log(req.headers);
+  jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
+    if(err){
+      // console.log(err);
+      res.send(err);
+    }
+    else{
+      // console.log(decoded);
+      client.query("UPDATE public.user SET name=$1, email=$2, updated_at=NOW() WHERE userid=$3", [req.body.name, req.body.email, decoded.userid])
+      .then(result => {
+        // console.log(result);
+        res.send({message: "Update Successful"});
+      })
+      .catch(error => {
+        console.log(error);
+        res.send(error);
+      });
+    }
+  });
+});
+
+/////////////////////////////Update User Password///////////////////////
+app.post("/api/updatepassword", (req, res) => {
+  // console.log(req.headers);
+  jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
+    if(err){
+      // console.log(err);
+      res.send(err);
+    }
+    else{
+      // console.log(decoded);
+      client.query("SELECT password from public.user WHERE userid=$1", [decoded.userid])
+      .then(result => {
+        if(result.rows.length === 0){
+          res.send({message: "No User found"});
+        }
+        else{
+          bcrypt.compare(req.body.oldpassword, result.rows[0].password)
+          .then(function(same) {
+            if(same){
+              bcrypt.hash(req.body.newpassword, saltRounds)
+              .then(hash => {
+                client.query("UPDATE public.user SET password=$1, updated_at=NOW() WHERE userid=$2", [hash, decoded.userid])
+                .then(result => {
+                  res.status(200).send({message: "Password updated successfully"});
+                })
+                .catch(error => {console.log(error)});
+              })
+              .catch(error => {console.log(error)});
+            }
+            else{
+              res.send({message: "Current password Incorrect"});
+            }
+          })
+          .catch(error => {console.log(error)});
+        }
+      })
+      .catch(error => {
+        console.log(error);
+        res.send(error);
+      });
+    }
+  });
+});
+
 //////////////////////////////Port Setup////////////////////////////////
 app.listen(process.env.PORT || "5000", function(err) {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log("Server is up on port 5000");
-    }
-  }); 
+  if (err) {
+    console.log(err);
+  } else {
+    console.log("Server is up on port 5000");
+  }
+}); 

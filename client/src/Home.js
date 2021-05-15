@@ -85,7 +85,7 @@ export default function Home() {
   }
 
   function handleAccountButton(e){
-    history.push('/');
+    history.push('/account');
   }
   
 
