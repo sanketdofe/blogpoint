@@ -45,18 +45,20 @@ const useStyles = makeStyles((theme) => ({
     }
     }));
 
-    export default function AddBlog() {
+    export default function AddBlog(props) {
     const classes = useStyles();
     const history = useHistory();
 
     let accesstoken = sessionStorage.getItem("accesstoken");
     const [loggedIn, setLoggedIn] = React.useState(accesstoken !== null);
+    const [editing, setEditing] = React.useState(false);
     const [blog, setBlog] = React.useState({
         title: '',
         type: '',
         description: '',
         body: '',
-        image: ''
+        image: '',
+        blogid: ''
     });
     useEffect(() => {
         setLoggedIn(accesstoken !== null);
@@ -64,7 +66,11 @@ const useStyles = makeStyles((theme) => ({
             alert("Please login first");
             history.push("/login")
         }
-    }, [loggedIn, history, accesstoken]);
+        setEditing(props.location.state.editing);
+        if(props.location.state.editing){
+            setBlog(props.location.state.blogdata);
+        }
+    }, [loggedIn, history, accesstoken, props.location.state]);
 
     let types = ['Fashion', 'Food', 'Travel', 'Music', 'Lifestyle', 'Fitness', 'DIY', 'Sports', 'Finance', 'Political', 'Business', 'Personal', 'Movie', 'Automotive', 'News', 'Pet', 'Gaming', 'Technology', 'Other'];
     
@@ -94,7 +100,8 @@ const useStyles = makeStyles((theme) => ({
             type: '',
             description: '',
             body: '',
-            image: ''
+            image: '',
+            blogid: ''
         });
     }
 
@@ -102,30 +109,48 @@ const useStyles = makeStyles((theme) => ({
         e.preventDefault();
         // console.log(blog);
         for(var item in blog){
-            if(blog[item] === '' && item !== 'image'){
+            if(blog[item] === '' && item !== 'image' && item !== 'blogid'){
                 alert(item + " cannot be empty");
                 return;
             }
         }
-        axios.post(serveraddress+"/api/addblog", blog, { headers: {authorization: "Bearer " + accesstoken}})
-        .then(res => {
-            // console.log(res);
-            if(res.data.message === 'A blog with same title already exists'){
-                alert(res.data.message);
-            }
-            else if(res.data.message === 'Blog added successfully'){
-                alert(res.data.message);
-                history.push('/');
-            }
-        })
-        .catch(err => {console.error(err)});
+        if(editing){
+            // console.log(editing);
+            axios.post(serveraddress+"/api/updateblog", blog, { headers: {authorization: "Bearer " + accesstoken}})
+            .then(res => {
+                // console.log(res);
+                if(res.data.message === 'Blog updated successfully'){
+                    alert(res.data.message);
+                    history.push('/blog', blog);
+                }
+                else{
+                    alert('Unable to update');
+                    history.goBack();
+                }
+            })
+            .catch(err => {console.error(err)});
+        }
+        else{
+            axios.post(serveraddress+"/api/addblog", blog, { headers: {authorization: "Bearer " + accesstoken}})
+            .then(res => {
+                // console.log(res);
+                if(res.data.message === 'A blog with same title already exists'){
+                    alert(res.data.message);
+                }
+                else if(res.data.message === 'Blog added successfully'){
+                    alert(res.data.message);
+                    history.push('/');
+                }
+            })
+            .catch(err => {console.error(err)});
+        }
     }
     
     return (
         <Fragment>
         <div className={classes.root}>
             <Card className={classes.card}>
-                <h1 className={classes.heading}>Create A Blog</h1>
+                <h1 className={classes.heading}>{props.location.state.editing ? 'Edit' : 'Create'} Blog</h1>
                 <FormControl required component="fieldset" className={classes.formControl}>
                 <InputLabel id="select-type">Type of Blog</InputLabel>
                 <Select
@@ -170,6 +195,7 @@ const useStyles = makeStyles((theme) => ({
                 <div className={classes.divbutton}>
                     <Button className={classes.button} onClick={handleSubmit}>Submit</Button>
                     <Button className={classes.button} onClick={handleReset}>Reset</Button>
+                    <Button className={classes.button} onClick={() => history.goBack()}>Cancel</Button>
                 </div>
             </Card>
         </div>

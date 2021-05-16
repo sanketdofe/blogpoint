@@ -122,6 +122,25 @@ app.post("/api/addblog", (req, res) => {
   
 });
 
+//////////////////////////////Update Blog//////////////////////////////////
+app.post("/api/updateblog", (req, res) => {
+  // console.log(req.body);
+  jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
+    if(err){
+      // console.log(err);
+      res.send(err);
+    }
+    else{
+      // console.log(decoded);
+      client.query("UPDATE public.blog SET title=$1, type=$2, description=$3, body=$4, image=$5, updated_at=NOW() WHERE blogid=$6", [req.body.title, req.body.type, req.body.description, req.body.body, req.body.image, req.body.blogid])
+      .then(result => {
+        res.send({message: "Blog updated successfully"});
+      })
+      .catch(error => {console.log(error)});
+    }
+  });
+});
+
 ///////////////////////////Get User Details/////////////////////////////
 app.get('/api/getuser', (req, res) => {
   jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
@@ -252,6 +271,33 @@ app.get("/api/getallblogs", (req, res) => {
   .catch(error => {
     console.log(error);
     res.send(error);
+  });
+});
+
+/////////////////////////////Get User Blogs//////////////////////////////
+app.get("/api/getuserblogs", (req, res) => {
+  jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
+    if(err){
+      // console.log(err);
+      res.send(err);
+    }
+    else{
+      // console.log(decoded);
+      client.query("SELECT b.*, u.name AS authorname FROM public.blog b, public.user u WHERE b.userid=$1 AND u.userid=$1", [decoded.userid])
+      .then(result => {
+        // console.log(result);
+        if(result.rows.length === 0){
+          res.send({message: "No blogs found"});
+        }
+        else{
+          res.send({message: `${result.rows.length} blogs found`, results: result.rows});
+        }
+      })
+      .catch(error => {
+        console.log(error);
+        res.send(error);
+      });
+    }
   });
 });
 

@@ -53,7 +53,7 @@ const useStyles = makeStyles((theme) => ({
   },
   card: {
     display: 'block',
-    width: '25%',
+    width: '23%',
     minWidth: '184px',
     margin: '0.5rem',
     borderRadius: '0.25rem'
@@ -77,6 +77,7 @@ export default function Home() {
   const [remainingBlogList, setRemainingBlogList] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [blogs, setBlogs] = React.useState([]);
+  const [myBlogButton, setMyBlogButton] = React.useState(loggedIn);
   
   useEffect(() => {
     setLoggedIn(accesstoken !== null);
@@ -108,6 +109,7 @@ export default function Home() {
     sessionStorage.removeItem("accesstoken");
     sessionStorage.removeItem("name");
     setLoggedIn(accesstoken !== null);
+    setMyBlogButton(false);
     history.push('/');
   }
 
@@ -123,10 +125,11 @@ export default function Home() {
     .post(serveraddress+"/api/getblogwithtype", {type: e.target.name})
     .then((res) => {
       if(res.data.message === "No blogs found for this type"){
-        alert("Sorry!" + res.data.message);
+        alert("Sorry! " + res.data.message);
       }
       else {
         setBlogs(res.data.results);
+        setMyBlogButton(true);
       }
     })
     .catch(err => {
@@ -143,6 +146,24 @@ export default function Home() {
   function handleExpandClick(e){
     setAnchorEl(e.currentTarget);
     setRemainingBlogList(!remainingBlogList);
+  }
+  
+  function handleMyBlogs(e){
+    axios
+    .get(serveraddress+"/api/getuserblogs", { headers: {authorization: "Bearer " + accesstoken}})
+    .then(res => {
+      // console.log(res);
+      if(res.data.message === "No blogs found"){
+        alert("Sorry! " + res.data.message);
+      }
+      else {
+        setBlogs(res.data.results);
+        setMyBlogButton(false);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+    });
   }
   
   const remainingtypes = 
@@ -181,8 +202,9 @@ export default function Home() {
 
   return (
     <Fragment>
-      <Toolbar className={classes.toolbar}>
-      <Button className={classes.button} onClick={() => history.push('/newblog')} size="small">Create Blog</Button>
+      <Toolbar className={classes.toolbar}>      
+      {myBlogButton ? <Button className={classes.button} onClick={handleMyBlogs} size="small">My Blogs</Button> : ''}
+      <Button className={classes.button} onClick={() => history.push('/newblog', {editing: false})} size="small">Create Blog</Button>
         <Typography
             component="h2"
             variant="h3"
@@ -221,6 +243,7 @@ export default function Home() {
         {
           blogs.map(blog => (
             <Card className={classes.card} key={blog.title}>
+            <div  style={{height: 300, verticalAlign: 'top'}}>
               <CardActionArea>
                 <CardMedia
                   className={classes.image}
@@ -235,6 +258,7 @@ export default function Home() {
                   </Typography>
                 </CardContent>
               </CardActionArea>
+              </div>
               <CardActions>
                 <Button size="small" className={classes.cardbutton} onClick={handleReadBlog} value={JSON.stringify(blog)}>
                   Read More

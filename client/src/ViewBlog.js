@@ -100,7 +100,7 @@ export default function ViewBlog(props) {
                 </Typography>
                 </CardContent>
                 <div style={{textAlign: 'center'}}>
-                    {parseInt(blog.userid) === parseInt(sessionStorage.getItem("userid")) ? <Button className={classes.button} >Edit</Button> : ''}
+                    {parseInt(blog.userid) === parseInt(sessionStorage.getItem("userid")) ? <Button className={classes.button} onClick={() => history.push('/editblog', {editing: true, blogdata: blog})}>Edit</Button> : ''}
                     <Button className={classes.button} onClick={() => history.push('/')}>Go Home</Button>
                 </div>
             </Card>
