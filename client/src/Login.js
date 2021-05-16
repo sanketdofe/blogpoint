@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import Button from '@material-ui/core/Button';
@@ -33,16 +33,34 @@ const useStyles = makeStyles((theme) => ({
         margin: "3px 0"
     }
   }));
-export default function Login() {
+export default function Login(props) {
+    let accesstoken = sessionStorage.getItem("accesstoken");
+    const [loggedIn, setLoggedIn] = React.useState(accesstoken !== null);
     const [tabactive, setTabactive] = React.useState(true);
     const [state, setState] = React.useState({
         name: "",
         email: "",
         password: "",
-        reenteredpassword: ""
+        reenteredpassword: "",
+        role: (props.location.pathname === '/manage' ? 'admin' : 'user')
     });
     const classes = useStyles();
     const history = useHistory();
+
+    useEffect(() => {
+        setLoggedIn(accesstoken !== null);
+        if(loggedIn){
+            alert('You are already Logged In');
+            history.push('/');
+        }
+        setState({
+            name: "",
+            email: "",
+            password: "",
+            reenteredpassword: "",
+            role: (props.location.pathname === '/manage' ? 'admin' : 'user')
+        });
+    }, [props.location.pathname]);
 
     function handleChange(event){
         // console.log(event.target.value)
@@ -51,6 +69,7 @@ export default function Login() {
     
     function handleReset(){
         setState({ 
+            ...state,
             name: "",
             email: "",
             password: "",
@@ -60,7 +79,7 @@ export default function Login() {
 
     function handleRegister(e){
         e.preventDefault();
-        console.log(state);
+        // console.log(state);
         for(var item in state){
             if(state[item] === ''){
                 alert(item + " cannot be empty");
@@ -101,13 +120,26 @@ export default function Login() {
         }
         let data = {
             email: state.email,
-            password: state.password
+            password: state.password,
+            role: state.role
         }
         axios
         .post(serveraddress+"/api/authenticate", data)
         .then((res) => {
-            console.log(res);
-            if(res.data.message === "No such User found. Please Register"){
+            // console.log(res);
+            if(res.data.message === "Your role does not qualify"){
+                if(state.role === "admin"){
+                    alert("You are not an admin, please login here as user");
+                    handleReset();
+                    history.push('/login');
+                }
+                else{
+                    alert("You are an admin, please login here again");
+                    handleReset();
+                    history.push('/manage');
+                }
+            }
+            else if(res.data.message === "No such User found. Please Register"){
                 alert(res.data.message);
                 setTabactive(false);
             }
@@ -119,6 +151,7 @@ export default function Login() {
                 sessionStorage.setItem("accesstoken", res.data.accesstoken);
                 sessionStorage.setItem("name", res.data.name);
                 sessionStorage.setItem("userid", res.data.userid);
+                sessionStorage.setItem("role", res.data.role);
                 history.push('/');
             }
           })
@@ -157,9 +190,14 @@ export default function Login() {
     );
     
     return (
+        <>
+        {
+        !loggedIn ? 
         <div className={classes.root}>
             <Card style={{padding: '20px'}}>
                 <div style={{textAlign: 'center'}}>
+                    <h2 style={{textTransform:'uppercase', color: '#34656d'}}>{state.role}</h2>
+                    <hr />
                     <Button size="large" className={classes.switchbutton} onClick={() =>setTabactive(true)} disabled={tabactive}>Login</Button>
                     <Button size="large" className={classes.switchbutton} onClick={() => setTabactive(false)} disabled={!tabactive}>Register</Button>
                     <hr />
@@ -167,5 +205,8 @@ export default function Login() {
                 </div>
             </Card>
         </div>
+        : ''
+        }
+        </>
     );
 }

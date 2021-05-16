@@ -50,6 +50,7 @@ const useStyles = makeStyles((theme) => ({
     const history = useHistory();
 
     let accesstoken = sessionStorage.getItem("accesstoken");
+    let editingval = props.location.state && props.location.state.editing;
     const [loggedIn, setLoggedIn] = React.useState(accesstoken !== null);
     const [editing, setEditing] = React.useState(false);
     const [blog, setBlog] = React.useState({
@@ -66,8 +67,12 @@ const useStyles = makeStyles((theme) => ({
             alert("Please login first");
             history.push("/login")
         }
-        setEditing(props.location.state.editing);
-        if(props.location.state.editing){
+        if(sessionStorage.getItem("role") === 'admin'){
+            alert("You are an admin and cannot create a blog. If you want to create a blog, please register with user account");
+            history.push('/');
+        }
+        if(editingval !== undefined && editingval){
+            setEditing(props.location.state.editing);
             setBlog(props.location.state.blogdata);
         }
     }, [loggedIn, history, accesstoken, props.location.state]);
@@ -150,7 +155,7 @@ const useStyles = makeStyles((theme) => ({
         <Fragment>
         <div className={classes.root}>
             <Card className={classes.card}>
-                <h1 className={classes.heading}>{props.location.state.editing ? 'Edit' : 'Create'} Blog</h1>
+                <h1 className={classes.heading}>{editing ? 'Edit' : 'Create'} Blog</h1>
                 <FormControl required component="fieldset" className={classes.formControl}>
                 <InputLabel id="select-type">Type of Blog</InputLabel>
                 <Select

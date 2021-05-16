@@ -42,7 +42,7 @@ app.post("/api/adduser", (req, res) => {
     if(result.rows.length === 0){
       bcrypt.hash(req.body.password, saltRounds)
       .then(hash => {
-        client.query("INSERT INTO public.user(name, email, password, created_at) VALUES ($1, $2, $3, NOW())", [req.body.name, req.body.email, hash])
+        client.query("INSERT INTO public.user(name, email, password, role, created_at) VALUES ($1, $2, $3, $4, NOW())", [req.body.name, req.body.email, hash, req.body.role])
         .then(result => {
           // console.log(result);
           res.status(200).send({message: "User Added Successfully"});
@@ -62,31 +62,37 @@ app.post("/api/adduser", (req, res) => {
 ////////////////////////////Authenticate/////////////////////////////////
 app.post("/api/authenticate", (req, res) => {
   // console.log(req.body);
-  client.query("SELECT userid, name, email, password FROM public.user WHERE email=$1", [req.body.email])
+  client.query("SELECT userid, name, email, password, role FROM public.user WHERE email=$1", [req.body.email])
   .then(result => {
     if(result.rows.length === 0){
       res.send({message: "No such User found. Please Register"});
     }
     else{
       // console.log(result.rows);
-      bcrypt.compare(req.body.password, result.rows[0].password)
-      .then(function(same) {
-        if(same){
-          var token = jwt.sign({ userid: result.rows[0].userid, email: result.rows[0].email}, process.env.secretkey, {
-            expiresIn: 1800
-          });
-          res.send({
-            message: "Authentication Success",
-            userid: result.rows[0].userid,
-            name: result.rows[0].name,
-            accesstoken: token
-          });
-        }
-        else{
-          res.send({message: "Wrong Password"});
-        }
-      })
-      .catch(error => {console.log(error)});
+      if(result.rows[0].role !== req.body.role){
+        res.send({message: 'Your role does not qualify'});
+      }
+      else{
+        bcrypt.compare(req.body.password, result.rows[0].password)
+        .then(function(same) {
+          if(same){
+            var token = jwt.sign({ userid: result.rows[0].userid, email: result.rows[0].email, role: result.rows[0].role}, process.env.secretkey, {
+              expiresIn: 1800
+            });
+            res.send({
+              message: "Authentication Success",
+              userid: result.rows[0].userid,
+              name: result.rows[0].name,
+              role: result.rows[0].role,
+              accesstoken: token
+            });
+          }
+          else{
+            res.send({message: "Wrong Password"});
+          }
+        })
+        .catch(error => {console.log(error)});
+      }
     }
   })
   .catch(error => {console.log(error)});
@@ -102,7 +108,7 @@ app.post("/api/addblog", (req, res) => {
     }
     else{
       // console.log(decoded);
-      client.query("SELECT userid, title from public.blog WHERE title=$1", [req.body.title])
+      client.query("SELECT userid, title from public.blog WHERE title=$1 AND isdeleted=false", [req.body.title])
       .then(result => {
         if(result.rows.length !== 0){
           res.send({message: "A blog with same title already exists"});
@@ -137,6 +143,55 @@ app.post("/api/updateblog", (req, res) => {
         res.send({message: "Blog updated successfully"});
       })
       .catch(error => {console.log(error)});
+    }
+  });
+});
+
+//////////////////////////////Delete BLog///////////////////////////////
+app.delete('/api/softdeleteblog', (req, res) => {
+  // console.log(req.headers);
+  // console.log(req.body);
+  jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
+    if(err){
+      // console.log(err);
+      res.send(err);
+    }
+    else{
+      // console.log(decoded);
+      if(decoded.role !== 'admin'){
+        res.send({message: 'Unauthorized: Requires role as admin'});
+      }
+      else{
+        client.query("UPDATE public.blog SET isdeleted=true, deleted_at=NOW() WHERE blogid=$1", [req.body.blogid])
+        .then(r => {
+          res.send({message: "Soft deletion successful"});
+        })
+        .catch(error => {console.log(error)});
+      }
+    }
+  });
+});
+
+app.delete('/api/harddeleteblog', (req, res) => {
+  // console.log(req.headers);
+  // console.log(req.body);
+  jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
+    if(err){
+      // console.log(err);
+      res.send(err);
+    }
+    else{
+      // console.log(decoded);
+      if(decoded.role !== 'admin'){
+        res.send({message: 'Unauthorized: Requires role as admin'});
+      }
+      else{
+        client.query("DELETE FROM public.blog WHERE blogid=$1", [req.body.blogid])
+        .then(r => {
+          res.send({message: "Hard deletion successful"});
+        })
+        .catch(error => {console.log(error)});
+      }
     }
   });
 });
@@ -239,7 +294,7 @@ app.post("/api/getblogwithtype", (req, res) => {
     res.redirect("/api/getallblogs");
   }
   else{
-    client.query("SELECT b.*, u.name AS authorname from public.blog b, public.user u WHERE b.userid=u.userid AND b.type=$1", [req.body.type])
+    client.query("SELECT b.*, u.name AS authorname from public.blog b, public.user u WHERE b.userid=u.userid AND b.type=$1 AND b.isdeleted=false", [req.body.type])
     .then(result => {
       // console.log(result.rows);
       if(result.rows.length === 0){
@@ -258,7 +313,7 @@ app.post("/api/getblogwithtype", (req, res) => {
 
 /////////////////////////////Get All Blogs//////////////////////////////
 app.get("/api/getallblogs", (req, res) => {
-  client.query("SELECT b.*, u.name AS authorname from public.blog b, public.user u WHERE b.userid=u.userid")
+  client.query("SELECT b.*, u.name AS authorname from public.blog b, public.user u WHERE b.userid=u.userid AND b.isdeleted=false")
   .then(result => {
     // console.log(result.rows);
     if(result.rows.length === 0){
@@ -283,7 +338,7 @@ app.get("/api/getuserblogs", (req, res) => {
     }
     else{
       // console.log(decoded);
-      client.query("SELECT b.*, u.name AS authorname FROM public.blog b, public.user u WHERE b.userid=$1 AND u.userid=$1", [decoded.userid])
+      client.query("SELECT b.*, u.name AS authorname FROM public.blog b, public.user u WHERE b.userid=$1 AND u.userid=$1 AND b.isdeleted=false", [decoded.userid])
       .then(result => {
         // console.log(result);
         if(result.rows.length === 0){

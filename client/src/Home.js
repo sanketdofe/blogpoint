@@ -59,7 +59,8 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: '0.25rem'
   },
   cardbutton: {
-    color: "#34656d"
+    color: "#34656d",
+    margin: '0 5px'
   },
   image: {
     height: 140,
@@ -73,14 +74,20 @@ export default function Home() {
 
   let accesstoken = sessionStorage.getItem("accesstoken");
   let name = sessionStorage.getItem("name");
+  let role = sessionStorage.getItem("role");
   const [loggedIn, setLoggedIn] = React.useState(accesstoken !== null);
   const [remainingBlogList, setRemainingBlogList] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [blogs, setBlogs] = React.useState([]);
   const [myBlogButton, setMyBlogButton] = React.useState(loggedIn);
+  const [admin, setAdmin] = React.useState(role === 'admin');
+  const [deleteButton, setDeleteButton] = React.useState(false);
+  const [updated, setUpdated] = React.useState(false);
   
   useEffect(() => {
     setLoggedIn(accesstoken !== null);
+    setAdmin(role === 'admin');
+    setDeleteButton(false);
     axios
     .get(serveraddress+"/api/getallblogs")
     .then((res) => {
@@ -94,7 +101,7 @@ export default function Home() {
     .catch(err => {
       console.error(err);
     });
-  }, [accesstoken]);
+  }, [accesstoken, role, updated]);
   
   let blogtypesall = ['All','Automotive','Business','DIY','Fashion','Finance','Fitness','Food','Gaming','Lifestyle','Movie','Music','News','Personal', 'Pet', 'Political','Sports','Technology','Travel','Other'];
   let blogtypes = blogtypesall.slice(0, 14);
@@ -108,6 +115,8 @@ export default function Home() {
   function handleLogout(e){
     sessionStorage.removeItem("accesstoken");
     sessionStorage.removeItem("name");
+    sessionStorage.removeItem("userid");
+    sessionStorage.removeItem("role");
     setLoggedIn(accesstoken !== null);
     setMyBlogButton(false);
     history.push('/');
@@ -166,6 +175,35 @@ export default function Home() {
     });
   }
   
+  function handleDelete(e){
+    // console.log(e.currentTarget);
+    let blogdata = JSON.parse(e.currentTarget.value);
+    if(e.currentTarget.name === 'soft'){
+      axios
+      .delete(serveraddress+"/api/softdeleteblog", { headers: {authorization: "Bearer " + accesstoken}, data: blogdata})
+      .then(res => {
+        // console.log(res);
+        alert(res.data.message);
+        setUpdated(!updated);
+      })
+      .catch(err => {
+        console.error(err);
+      });
+    }
+    else if(e.currentTarget.name === 'hard'){
+      axios
+      .delete(serveraddress+"/api/harddeleteblog", { headers: {authorization: "Bearer " + accesstoken}, data: blogdata})
+      .then(res => {
+        // console.log(res);
+        alert(res.data.message);
+        setUpdated(!updated);
+      })
+      .catch(err => {
+        console.error(err);
+      });
+    }
+  }
+
   const remainingtypes = 
     <div>
       <Popper open={remainingBlogList} timeout="auto" unmountOnExit anchorEl={anchorEl}>
@@ -203,8 +241,12 @@ export default function Home() {
   return (
     <Fragment>
       <Toolbar className={classes.toolbar}>      
-      {myBlogButton ? <Button className={classes.button} onClick={handleMyBlogs} size="small">My Blogs</Button> : ''}
-      <Button className={classes.button} onClick={() => history.push('/newblog', {editing: false})} size="small">Create Blog</Button>
+        { admin ? '' :
+        <div>
+          {myBlogButton ? <Button className={classes.button} onClick={handleMyBlogs} size="small">My Blogs</Button> : ''}
+          <Button className={classes.button} onClick={() => history.push('/newblog', {editing: false})} size="small">Create Blog</Button>
+        </div>
+        }
         <Typography
             component="h2"
             variant="h3"
@@ -260,9 +302,23 @@ export default function Home() {
               </CardActionArea>
               </div>
               <CardActions>
-                <Button size="small" className={classes.cardbutton} onClick={handleReadBlog} value={JSON.stringify(blog)}>
-                  Read More
-                </Button>
+                {
+                  deleteButton ?
+                  <div>
+                    <Button size="small" className={classes.cardbutton} onClick={handleDelete} name='soft' value={JSON.stringify(blog)}>Soft Delete</Button>
+                    <Button size="small" className={classes.cardbutton} onClick={handleDelete} name='hard' value={JSON.stringify(blog)}>Hard Delete</Button>
+                    <Button size="small" className={classes.cardbutton} onClick={() => setDeleteButton(false)}>Cancel</Button>
+                  </div>
+                  :
+                  <div>
+                    <Button size="small" className={classes.cardbutton} onClick={handleReadBlog} value={JSON.stringify(blog)}>
+                      Read More
+                    </Button>
+                    {admin ? <Button size="small" className={classes.cardbutton} onClick={() => setDeleteButton(true)}>
+                      Delete
+                    </Button> : ''}
+                  </div>
+                }
               </CardActions>
             </Card>
           ))
