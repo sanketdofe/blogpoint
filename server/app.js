@@ -108,7 +108,7 @@ app.post("/api/addblog", (req, res) => {
           res.send({message: "A blog with same title already exists"});
         }
         else{
-          client.query("INSERT INTO public.blog(userid, title, topic, description, body, image, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())", [decoded.userid, req.body.title, req.body.topic, req.body.description, req.body.body, req.body.image])
+          client.query("INSERT INTO public.blog(userid, title, type, description, body, image, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())", [decoded.userid, req.body.title, req.body.type, req.body.description, req.body.body, req.body.image])
           .then(result => {
             // console.log(result);
             res.send({message: "Blog added successfully"})
@@ -210,6 +210,48 @@ app.post("/api/updatepassword", (req, res) => {
         res.send(error);
       });
     }
+  });
+});
+
+///////////////////////Get Blog of particular Type//////////////////////
+app.post("/api/getblogwithtype", (req, res) => {
+  // console.log(req.body);
+  if(req.body.type === 'All'){
+    res.redirect("/api/getallblogs");
+  }
+  else{
+    client.query("SELECT * from public.blog WHERE type=$1", [req.body.type])
+    .then(result => {
+      // console.log(result.rows);
+      if(result.rows.length === 0){
+        res.send({message: "No blogs found for this type"});
+      }
+      else{
+        res.send({message: `${result.rows.length} blogs found for this type`, results: result.rows});
+      }
+    })
+    .catch(error => {
+      console.log(error);
+      res.send(error);
+    });
+  }
+});
+
+/////////////////////////////Get All Blogs//////////////////////////////
+app.get("/api/getallblogs", (req, res) => {
+  client.query("SELECT * from public.blog")
+  .then(result => {
+    // console.log(result.rows);
+    if(result.rows.length === 0){
+      res.send({message: "No blogs found"});
+    }
+    else{
+      res.send({message: `${result.rows.length} blogs found`, results: result.rows});
+    }
+  })
+  .catch(error => {
+    console.log(error);
+    res.send(error);
   });
 });
 

@@ -53,7 +53,7 @@ const useStyles = makeStyles((theme) => ({
     const [loggedIn, setLoggedIn] = React.useState(accesstoken !== null);
     const [blog, setBlog] = React.useState({
         title: '',
-        topic: '',
+        type: '',
         description: '',
         body: '',
         image: ''
@@ -91,7 +91,7 @@ const useStyles = makeStyles((theme) => ({
     function handleReset(){
         setBlog({
             title: '',
-            topic: '',
+            type: '',
             description: '',
             body: '',
             image: ''
@@ -131,9 +131,9 @@ const useStyles = makeStyles((theme) => ({
                 <Select
                     labelId="select-type"
                     id="select-type"
-                    name="topic"
+                    name="type"
                     onChange={handleChange}
-                    value={blog.topic}
+                    value={blog.type}
                     className={classes.textfield}
                 >
                     {types.map(type => {

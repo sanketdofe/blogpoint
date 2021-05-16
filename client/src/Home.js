@@ -9,11 +9,19 @@ import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
 import Button from '@material-ui/core/Button';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import Popper from '@material-ui/core/Popper';
+import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import SearchIcon from '@material-ui/icons/Search';
+import ExpandLess from '@material-ui/icons/ExpandLess';
+import ExpandMore from '@material-ui/icons/ExpandMore';
 import { useHistory } from 'react-router-dom';
+import axios from 'axios';
 
+let serveraddress = "http://localhost:5000";
 const useStyles = makeStyles((theme) => ({
   toolbar: {
     borderBottom: `1px solid ${theme.palette.divider}`,
@@ -66,11 +74,30 @@ export default function Home() {
   let accesstoken = sessionStorage.getItem("accesstoken");
   let name = sessionStorage.getItem("name");
   const [loggedIn, setLoggedIn] = React.useState(accesstoken !== null);
+  const [remainingBlogList, setRemainingBlogList] = React.useState(false);
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [blogs, setBlogs] = React.useState([]);
+  
   useEffect(() => {
     setLoggedIn(accesstoken !== null);
+    axios
+    .get(serveraddress+"/api/getallblogs")
+    .then((res) => {
+      if(res.data.message === "No blogs found"){
+        alert("Sorry!" + res.data.message);
+      }
+      else {
+        setBlogs(res.data.results);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+    });
   }, [accesstoken]);
-  let blogtypes = [1, 2, 3, 4, 5, 6];
-  let shortblogs = [1, 2, 3, 4, 5, 6];
+  
+  let blogtypesall = ['All','Automotive','Business','DIY','Fashion','Finance','Fitness','Food','Gaming','Lifestyle','Movie','Music','News','Personal', 'Pet', 'Political','Sports','Technology','Travel','Other'];
+  let blogtypes = blogtypesall.slice(0, 14);
+  let remainingBlogtypes = blogtypesall.slice(14, blogtypesall.length);
 
 
   function handleLoginButton(e){
@@ -88,11 +115,61 @@ export default function Home() {
     history.push('/account');
   }
   
+  function handleSelectBlogtype(e){
+    // console.log(e.target);
+    e.preventDefault();
+    setRemainingBlogList(false);
+    axios
+    .post(serveraddress+"/api/getblogwithtype", {type: e.target.name})
+    .then((res) => {
+      if(res.data.message === "No blogs found for this type"){
+        alert("Sorry!" + res.data.message);
+      }
+      else {
+        setBlogs(res.data.results);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+    });
+  }
+
+  function handleExpandClick(e){
+    setAnchorEl(e.currentTarget);
+    setRemainingBlogList(!remainingBlogList);
+  }
+  
+  const remainingtypes = 
+    <div>
+      <Popper open={remainingBlogList} timeout="auto" unmountOnExit anchorEl={anchorEl}>
+        <Paper>
+        <List>
+          {
+            remainingBlogtypes.map(type => {
+              return(
+              <ListItem key={type}>
+                <Link
+                  name={type}
+                  variant="subtitle1"
+                  href={type}
+                  onClick={handleSelectBlogtype}
+                  className={classes.blogtype}
+                >
+                  {type}
+                </Link>
+              </ListItem>
+              )
+            })
+          }
+        </List>
+        </Paper>
+      </Popper>
+    </div>
 
   const loginbutton = <Button className={classes.button} variant="outlined" onClick={handleLoginButton} size="small">Login</Button>
   const accountbutton = 
     <div>
-      <Button className={classes.accountbutton} variant="" onClick={handleAccountButton} size="small">{name}</Button>
+      <Button className={classes.accountbutton} onClick={handleAccountButton} size="small">{name}</Button>
       <Button className={classes.button} variant="outlined" onClick={handleLogout} size="small">Logout</Button>
     </div>
 
@@ -118,32 +195,37 @@ export default function Home() {
           blogtypes.map((type) => (
             <Link
               noWrap
-              key='Fashion'
+              key={type}
+              name={type}
               variant="subtitle1"
-              href='fashion'
+              href={type}
+              onClick={handleSelectBlogtype}
               className={classes.blogtype}
             >
-              Fashion
+              {type}
             </Link>
           ))
         }
+        <IconButton onClick={handleExpandClick}>
+          {remainingBlogList ? <ExpandLess /> : <ExpandMore />}
+        </IconButton>
+        {remainingtypes}
       </Toolbar>
       <Container className={classes.cardstack}>
         {
-          shortblogs.map(shortblog => (
-            <Card className={classes.card}>
+          blogs.map(blog => (
+            <Card className={classes.card} key={blog.title}>
               <CardActionArea>
                 <CardMedia
                   className={classes.image}
-                  image="https://cdn.pixabay.com/photo/2015/04/19/08/32/marguerite-729510__340.jpg"
+                  image={blog.image}
                 />
                 <CardContent>
                   <Typography gutterBottom variant="h5" component="h2">
-                    Lizard
+                    {blog.title}
                   </Typography>
                   <Typography variant="body2" color="textSecondary" component="p">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                    across all continents except Antarctica
+                    {blog.description}
                   </Typography>
                 </CardContent>
               </CardActionArea>
