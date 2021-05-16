@@ -134,6 +134,12 @@ export default function Home() {
     });
   }
 
+  function handleReadBlog(e){
+    // console.log(JSON.parse(e.currentTarget.value));
+    let blogdata = JSON.parse(e.currentTarget.value);
+    history.push('/blog', blogdata);
+  }
+
   function handleExpandClick(e){
     setAnchorEl(e.currentTarget);
     setRemainingBlogList(!remainingBlogList);
@@ -230,7 +236,7 @@ export default function Home() {
                 </CardContent>
               </CardActionArea>
               <CardActions>
-                <Button size="small" className={classes.cardbutton}>
+                <Button size="small" className={classes.cardbutton} onClick={handleReadBlog} value={JSON.stringify(blog)}>
                   Read More
                 </Button>
               </CardActions>

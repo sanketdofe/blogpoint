@@ -220,7 +220,7 @@ app.post("/api/getblogwithtype", (req, res) => {
     res.redirect("/api/getallblogs");
   }
   else{
-    client.query("SELECT * from public.blog WHERE type=$1", [req.body.type])
+    client.query("SELECT b.*, u.name AS authorname from public.blog b, public.user u WHERE b.userid=u.userid AND b.type=$1", [req.body.type])
     .then(result => {
       // console.log(result.rows);
       if(result.rows.length === 0){
@@ -239,7 +239,7 @@ app.post("/api/getblogwithtype", (req, res) => {
 
 /////////////////////////////Get All Blogs//////////////////////////////
 app.get("/api/getallblogs", (req, res) => {
-  client.query("SELECT * from public.blog")
+  client.query("SELECT b.*, u.name AS authorname from public.blog b, public.user u WHERE b.userid=u.userid")
   .then(result => {
     // console.log(result.rows);
     if(result.rows.length === 0){

@@ -4,6 +4,7 @@ import Home from './Home';
 import Login from './Login';
 import AddBlog from './AddBlog';
 import Useraccount from './Useraccount';
+import ViewBlog from './ViewBlog';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route exact path="/login" component={Login} />
           <Route exact path="/newblog" component={AddBlog} />
           <Route exact path="/account" component={Useraccount} />
+          <Route exact path="/blog" component={ViewBlog} />
         </Switch>
       </div>
     </BrowserRouter>

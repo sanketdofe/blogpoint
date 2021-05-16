@@ -118,6 +118,7 @@ export default function Login() {
             else if(res.data.message === "Authentication Success"){
                 sessionStorage.setItem("accesstoken", res.data.accesstoken);
                 sessionStorage.setItem("name", res.data.name);
+                sessionStorage.setItem("userid", res.data.userid);
                 history.push('/');
             }
           })
