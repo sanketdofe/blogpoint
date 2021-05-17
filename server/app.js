@@ -52,7 +52,7 @@ app.post("/api/adduser", (req, res) => {
       .catch(error => {console.log(error)});
     }
     else{
-      res.status(409).send({message: "User with same email already exists"});
+      res.status(200).send({message: "User with same email already exists"});
     }
   })
   .catch(error => {console.log(error)});
@@ -65,12 +65,12 @@ app.post("/api/authenticate", (req, res) => {
   client.query("SELECT userid, name, email, password, role FROM public.user WHERE email=$1", [req.body.email])
   .then(result => {
     if(result.rows.length === 0){
-      res.status(404).send({message: "No such User found. Please Register"});
+      res.status(200).send({message: "No such User found. Please Register"});
     }
     else{
       // console.log(result.rows);
       if(result.rows[0].role !== req.body.role){
-        res.status(400).send({message: 'Your role does not qualify'});
+        res.status(200).send({message: 'Your role does not qualify'});
       }
       else{
         bcrypt.compare(req.body.password, result.rows[0].password)
@@ -88,7 +88,7 @@ app.post("/api/authenticate", (req, res) => {
             });
           }
           else{
-            res.status(400).send({message: "Wrong Password"});
+            res.status(200).send({message: "Wrong Password"});
           }
         })
         .catch(error => {console.log(error)});
@@ -102,18 +102,18 @@ app.post("/api/authenticate", (req, res) => {
 app.post("/api/addblog", (req, res) => {
   // console.log(req.headers);
   if(req.headers.authorization === undefined){
-    res.status(401).send({message: 'Access token required'});
+    res.status(200).send({message: 'Access token required'});
     return;
   }
   else if (Object.keys(req.body).length === 0){
-    res.status(406).send({message: 'Pass all blog field in body'});
+    res.status(200).send({message: 'Pass all blog field in body'});
     return;
   }
   else{
     for (item of [req.body.title, req.body.type, req.body.description, req.body.body, req.body.image]){
       // console.log(item);
       if(item === undefined || item === null){
-        res.status(406).send({message: 'Some fields are missing. Pass all blog field in body'});
+        res.status(200).send({message: 'Some fields are missing. Pass all blog field in body'});
         return;
       }
     }
@@ -121,14 +121,14 @@ app.post("/api/addblog", (req, res) => {
   jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
     if(err){
       // console.log(err);
-      res.status(401).send(err);
+      res.status(200).send(err);
     }
     else{
       // console.log(decoded);
       client.query("SELECT userid, title from public.blog WHERE title=$1 AND isdeleted=false", [req.body.title])
       .then(result => {
         if(result.rows.length !== 0){
-          res.status(409).send({message: "A blog with same title already exists"});
+          res.status(200).send({message: "A blog with same title already exists"});
         }
         else{
           client.query("INSERT INTO public.blog(userid, title, type, description, body, image, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())", [decoded.userid, req.body.title, req.body.type, req.body.description, req.body.body, req.body.image])
@@ -149,18 +149,18 @@ app.post("/api/addblog", (req, res) => {
 app.put("/api/updateblog", (req, res) => {
   // console.log(req.body);
   if(req.headers.authorization === undefined){
-    res.status(401).send({message: 'Access token required'});
+    res.status(200).send({message: 'Access token required'});
     return;
   }
   else if(req.body.blogid === undefined || req.body.blogid === null){
-    res.status(406).send({message: 'Provide the blogid of the blog to be updated'});
+    res.status(200).send({message: 'Provide the blogid of the blog to be updated'});
     return;
   }
   else {
     for (item of [req.body.title, req.body.type, req.body.description, req.body.body, req.body.image]){
       // console.log(item);
       if(item === undefined || item === null){
-        res.status(406).send({message: 'Some fields are missing. Pass all blog field in body'});
+        res.status(200).send({message: 'Some fields are missing. Pass all blog field in body'});
         return;
       }
     }
@@ -168,7 +168,7 @@ app.put("/api/updateblog", (req, res) => {
   jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
     if(err){
       // console.log(err);
-      res.status(401).send(err);
+      res.status(200).send(err);
     }
     else{
       // console.log(decoded);
@@ -186,28 +186,28 @@ app.delete('/api/softdeleteblog', (req, res) => {
   // console.log(req.headers);
   // console.log(req.body);
   if(req.headers.authorization === undefined){
-    res.status(401).send({message: 'Access token required'});
+    res.status(200).send({message: 'Access token required'});
     return;
   }
   else if(req.body.blogid === undefined || req.body.blogid === null){
-    res.status(406).send({message: 'Provide the blogid of the blog to be soft deleted'});
+    res.status(200).send({message: 'Provide the blogid of the blog to be soft deleted'});
     return;
   }
   jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
     if(err){
       // console.log(err);
-      res.status(401).send(err);
+      res.status(200).send(err);
     }
     else{
       // console.log(decoded);
       if(decoded.role !== 'admin'){
-        res.status(403).send({message: 'Unauthorized: Requires role as admin'});
+        res.status(200).send({message: 'Unauthorized: Requires role as admin'});
       }
       else{
         client.query("UPDATE public.blog SET isdeleted=true, deleted_at=NOW() WHERE blogid=$1", [req.body.blogid])
         .then(r => {
           if(r.rowCount === 0){
-            res.status(404).send({message: "Blog with given blogid not found (Already deleted)"})
+            res.status(200).send({message: "Blog with given blogid not found (Already deleted)"})
           }else{
             res.status(200).send({message: "Soft deletion successful"});
           }
@@ -222,28 +222,28 @@ app.delete('/api/harddeleteblog', (req, res) => {
   // console.log(req.headers);
   // console.log(req.body);
   if(req.headers.authorization === undefined){
-    res.status(401).send({message: 'Access token required'});
+    res.status(200).send({message: 'Access token required'});
     return;
   }
   else if(req.body.blogid === undefined || req.body.blogid === null){
-    res.status(406).send({message: 'Provide the blogid of the blog to be hard deleted'});
+    res.status(200).send({message: 'Provide the blogid of the blog to be hard deleted'});
     return;
   }
   jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
     if(err){
       // console.log(err);
-      res.status(401).send(err);
+      res.status(200).send(err);
     }
     else{
       // console.log(decoded);
       if(decoded.role !== 'admin'){
-        res.status(403).send({message: 'Unauthorized: Requires role as admin'});
+        res.status(200).send({message: 'Unauthorized: Requires role as admin'});
       }
       else{
         client.query("DELETE FROM public.blog WHERE blogid=$1", [req.body.blogid])
         .then(r => {
           if(r.rowCount === 0){
-            res.status(404).send({message: "Blog with given blogid not found (Already deleted)"})
+            res.status(200).send({message: "Blog with given blogid not found (Already deleted)"})
           }else{
             res.status(200).send({message: "Hard deletion successful"});
           }
@@ -257,20 +257,20 @@ app.delete('/api/harddeleteblog', (req, res) => {
 ///////////////////////////Get User Details/////////////////////////////
 app.get('/api/getuser', (req, res) => {
   if(req.headers.authorization === undefined){
-    res.status(401).send({message: 'Access token required'});
+    res.status(200).send({message: 'Access token required'});
     return;
   }
   jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
     if(err){
       // console.log(err);
-      res.status(401).send(err);
+      res.status(200).send(err);
     }
     else{
       // console.log(decoded);
       client.query("SELECT name, email, role from public.user WHERE userid=$1", [decoded.userid])
       .then(result => {
         if(result.rows.length === 0){
-          res.status(404).send({message: "User Not found"});
+          res.status(200).send({message: "User Not found"});
         }
         else{
           res.status(200).send({message: "User Found", ...result.rows[0]});
@@ -286,17 +286,17 @@ app.get('/api/getuser', (req, res) => {
 app.put("/api/updateuser", (req, res) => {
   // console.log(req.headers);
   if(req.headers.authorization === undefined){
-    res.status(401).send({message: 'Access token required'});
+    res.status(200).send({message: 'Access token required'});
     return;
   }
   else if(req.body.name === undefined || req.body.name === null || req.body.email === undefined || req.body.email === null){
-    res.status(406).send({message: 'Provide the updated name and email of the user to be updated'});
+    res.status(200).send({message: 'Provide the updated name and email of the user to be updated'});
     return;
   }
   jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
     if(err){
       // console.log(err);
-      res.status(401).send(err);
+      res.status(200).send(err);
     }
     else{
       // console.log(decoded);
@@ -304,7 +304,7 @@ app.put("/api/updateuser", (req, res) => {
       .then(result => {
         // console.log(result);
         if(result.rowCount === 0){
-          res.status(404).send({message: "User not found"});
+          res.status(200).send({message: "User not found"});
         }
         else{
           res.status(200).send({message: "Update Successful"});
@@ -321,24 +321,24 @@ app.put("/api/updateuser", (req, res) => {
 app.put("/api/updatepassword", (req, res) => {
   // console.log(req.headers);
   if(req.headers.authorization === undefined){
-    res.status(401).send({message: 'Access token required'});
+    res.status(200).send({message: 'Access token required'});
     return;
   }
   else if(req.body.oldpassword === undefined || req.body.oldpassword === null || req.body.newpassword === undefined || req.body.newpassword === null){
-    res.status(406).send({message: 'Provide the oldpassword and newpassword of the user to be updated'});
+    res.status(200).send({message: 'Provide the oldpassword and newpassword of the user to be updated'});
     return;
   }
   jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
     if(err){
       // console.log(err);
-      res.status(401).send(err);
+      res.status(200).send(err);
     }
     else{
       // console.log(decoded);
       client.query("SELECT password from public.user WHERE userid=$1", [decoded.userid])
       .then(result => {
         if(result.rows.length === 0){
-          res.status(404).send({message: "No User found"});
+          res.status(200).send({message: "No User found"});
         }
         else{
           bcrypt.compare(req.body.oldpassword, result.rows[0].password)
@@ -355,7 +355,7 @@ app.put("/api/updatepassword", (req, res) => {
               .catch(error => {console.log(error)});
             }
             else{
-              res.status(403).send({message: "Current password Incorrect"});
+              res.status(200).send({message: "Current password Incorrect"});
             }
           })
           .catch(error => {console.log(error)});
@@ -379,7 +379,7 @@ app.get("/api/getblogwithtype/:type", (req, res) => {
     .then(result => {
       // console.log(result.rows);
       if(result.rows.length === 0){
-        res.status(404).send({message: "No blogs found for this type"});
+        res.status(200).send({message: "No blogs found for this type"});
       }
       else{
         res.status(200).send({message: `${result.rows.length} blogs found for this type`, results: result.rows});
@@ -397,7 +397,7 @@ app.get("/api/getallblogs", (req, res) => {
   .then(result => {
     // console.log(result.rows);
     if(result.rows.length === 0){
-      res.status(404).send({message: "No blogs found"});
+      res.status(200).send({message: "No blogs found"});
     }
     else{
       res.status(200).send({message: `${result.rows.length} blogs found`, results: result.rows});
@@ -411,13 +411,13 @@ app.get("/api/getallblogs", (req, res) => {
 /////////////////////////////Get User Blogs//////////////////////////////
 app.get("/api/getuserblogs", (req, res) => {
   if(req.headers.authorization === undefined){
-    res.status(401).send({message: 'Access token required'});
+    res.status(200).send({message: 'Access token required'});
     return;
   }
   jwt.verify(req.headers.authorization.split(' ')[1], process.env.secretkey, function(err, decoded) {
     if(err){
       // console.log(err);
-      res.status(401).send(err);
+      res.status(200).send(err);
     }
     else{
       // console.log(decoded);
@@ -425,7 +425,7 @@ app.get("/api/getuserblogs", (req, res) => {
       .then(result => {
         // console.log(result);
         if(result.rows.length === 0){
-          res.status(404).send({message: "No blogs found"});
+          res.status(200).send({message: "No blogs found"});
         }
         else{
           res.status(200).send({message: `${result.rows.length} blogs found`, results: result.rows});
