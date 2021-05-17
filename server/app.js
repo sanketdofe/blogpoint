@@ -19,11 +19,10 @@ app.use(cors());
 
 /////////////////////////////Database Connection////////////////////////
 const client = new Client({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_DATABASE,
-  password: process.env.DB_PASS,
-  port: process.env.DB_PORT
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 client.connect();
 
