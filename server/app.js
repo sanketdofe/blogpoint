@@ -16,7 +16,6 @@ app.use(
 );
 app.use(cors());
 
-clientport = "localhost:3000";
 
 /////////////////////////////Database Connection////////////////////////
 const client = new Client({
@@ -28,10 +27,6 @@ const client = new Client({
 });
 client.connect();
 
-////////////////////////////////React App//////////////////////////////
-app.get("/", (req, res) => {
-    res.redirect(clientport);
-});
 
 
 /////////////////////////////Add New User///////////////////////////////

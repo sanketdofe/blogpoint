@@ -7,7 +7,7 @@ import FormControl from '@material-ui/core/FormControl';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom';
 
-let serveraddress = "http://localhost:5000";
+let serveraddress = "https://damp-brook-68868.herokuapp.com";
 const useStyles = makeStyles((theme) => ({
     root: {
         display: 'flex',
@@ -182,7 +182,7 @@ export default function Login(props) {
                 <TextField className={classes.textfield} value={state.password} onChange={handleChange} required type="password" name="password" label="Password" />
                 <div>
                     <Button size="small" variant='outlined' onClick={handleLogin} className={classes.button} style={{backgroundColor: '#34656d',color: "#FFFFFF"}}>Login</Button>
-                    <Button size="small" variant='outlined' className={classes.button} >Forgot Password</Button>
+                    <Button size="small" variant='outlined' onClick={() => history.push('/')} className={classes.button} >Go Home</Button>
                 </div>
             </FormControl>
         </div>
@@ -200,7 +200,7 @@ export default function Login(props) {
                     <Button size="large" className={classes.switchbutton} onClick={() =>setTabactive(true)} disabled={tabactive}>Login</Button>
                     <Button size="large" className={classes.switchbutton} onClick={() => setTabactive(false)} disabled={!tabactive}>Register</Button>
                     <hr />
-                    {tabactive ? LoginForm : RegisterForm}
+                    {tabactive ? LoginForm : (state.role==='admin' ? '' : RegisterForm)}
                 </div>
             </Card>
         </div>
