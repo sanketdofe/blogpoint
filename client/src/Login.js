@@ -34,8 +34,7 @@ const useStyles = makeStyles((theme) => ({
     }
   }));
 export default function Login(props) {
-    let accesstoken = sessionStorage.getItem("accesstoken");
-    const [loggedIn, setLoggedIn] = React.useState(accesstoken !== null);
+    const [loggedIn, setLoggedIn] = React.useState(sessionStorage.getItem("accesstoken") !== null);
     const [tabactive, setTabactive] = React.useState(true);
     const [state, setState] = React.useState({
         name: "",
@@ -48,7 +47,7 @@ export default function Login(props) {
     const history = useHistory();
 
     useEffect(() => {
-        setLoggedIn(accesstoken !== null);
+        setLoggedIn(sessionStorage.getItem("accesstoken") !== null);
         if(loggedIn){
             alert('You are already Logged In');
             history.push('/');
@@ -60,7 +59,7 @@ export default function Login(props) {
             reenteredpassword: "",
             role: (props.location.pathname === '/manage' ? 'admin' : 'user')
         });
-    }, [props.location.pathname]);
+    }, [props.location.pathname, loggedIn, history]);
 
     function handleChange(event){
         // console.log(event.target.value)

@@ -62,7 +62,6 @@ const useStyles = makeStyles((theme) => ({
         blogid: ''
     });
     useEffect(() => {
-        setLoggedIn(accesstoken !== null);
         if(!loggedIn){
             alert("Please login first");
             history.push("/login")
@@ -75,7 +74,7 @@ const useStyles = makeStyles((theme) => ({
             setEditing(props.location.state.editing);
             setBlog(props.location.state.blogdata);
         }
-    }, [loggedIn, history, accesstoken, props.location.state]);
+    }, [loggedIn, history, accesstoken, props.location.state, editingval]);
 
     let types = ['Fashion', 'Food', 'Travel', 'Music', 'Lifestyle', 'Fitness', 'DIY', 'Sports', 'Finance', 'Political', 'Business', 'Personal', 'Movie', 'Automotive', 'News', 'Pet', 'Gaming', 'Technology', 'Other'];
     
@@ -121,10 +120,18 @@ const useStyles = makeStyles((theme) => ({
         }
         if(editing){
             // console.log(editing);
-            axios.post(serveraddress+"/api/updateblog", blog, { headers: {authorization: "Bearer " + accesstoken}})
+            axios.put(serveraddress+"/api/updateblog", blog, { headers: {authorization: "Bearer " + accesstoken}})
             .then(res => {
                 // console.log(res);
-                if(res.data.message === 'Blog updated successfully'){
+                if(res.data.message === "jwt expired" || res.data.message === 'Access token required'){
+                    alert("You have been logged out. Please login again");
+                    setLoggedIn(false);
+                    sessionStorage.removeItem("accesstoken");
+                    sessionStorage.removeItem("name");
+                    sessionStorage.removeItem("userid");
+                    sessionStorage.removeItem("role");
+                }
+                else if(res.data.message === 'Blog updated successfully'){
                     alert(res.data.message);
                     history.push('/blog', blog);
                 }
@@ -139,7 +146,15 @@ const useStyles = makeStyles((theme) => ({
             axios.post(serveraddress+"/api/addblog", blog, { headers: {authorization: "Bearer " + accesstoken}})
             .then(res => {
                 // console.log(res);
-                if(res.data.message === 'A blog with same title already exists'){
+                if(res.data.message === "jwt expired" || res.data.message === 'Access token required'){
+                    alert("You have been logged out. Please login again");
+                    setLoggedIn(false);
+                    sessionStorage.removeItem("accesstoken");
+                    sessionStorage.removeItem("name");
+                    sessionStorage.removeItem("userid");
+                    sessionStorage.removeItem("role");
+                }
+                else if(res.data.message === 'A blog with same title already exists'){
                     alert(res.data.message);
                 }
                 else if(res.data.message === 'Blog added successfully'){

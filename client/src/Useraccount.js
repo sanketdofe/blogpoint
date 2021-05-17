@@ -47,19 +47,21 @@ export default function Useraccount() {
     const classes = useStyles();
     const history = useHistory();
     useEffect(() => {
-        setLoggedIn(accesstoken !== null);
         if(!loggedIn){
             alert("Please login again");
             history.push("/login");
         }
         axios.get(serveraddress+"/api/getuser", { headers: {authorization: "Bearer " + accesstoken}})
         .then(res => {
-            if(res.data.message === 'jwt expired'){
-                setLoggedIn(false);
+            if(res.data.message === 'jwt expired' || res.data.message === 'Access token required'){
+                alert("You have been logged out");
                 sessionStorage.removeItem("accesstoken");
                 sessionStorage.removeItem("name");
-                history.push('/login');
-            }else{
+                sessionStorage.removeItem("userid");
+                sessionStorage.removeItem("role");
+                setLoggedIn(false);
+            }
+            else if(res.data.message === 'User Found'){
                 setUser({
                     email: res.data.email, 
                     name: res.data.name,
@@ -73,7 +75,7 @@ export default function Useraccount() {
     }, [accesstoken, loggedIn, history]);
 
     function handleChange(event){
-        console.log(user);
+        // console.log(user);
         setUser({ ...user, [event.target.name]: event.target.value});
     };
     
@@ -86,16 +88,21 @@ export default function Useraccount() {
             alert("Name cannot be empty");
         }
         else{
-            axios.post(serveraddress+"/api/updateuser", {email: user.email, name: user.name}, { headers: {authorization: "Bearer " + accesstoken}})
+            axios.put(serveraddress+"/api/updateuser", {email: user.email, name: user.name}, { headers: {authorization: "Bearer " + accesstoken}})
             .then(res => {
                 // console.log(res);
-                if(res.data.message === 'Update Successful'){
-                    alert(res.data.message);
-                    history.push('/');
-                }else if(res.data.message === 'jwt expired'){
+                if(res.data.message === 'jwt expired' || res.data.message === 'Access token required'){
                     sessionStorage.removeItem("accesstoken");
                     sessionStorage.removeItem("name");
+                    sessionStorage.removeItem("userid");
+                    sessionStorage.removeItem("role");
+                    alert("You have been logged out, please login again");
                     setLoggedIn(false);
+                    history.push("/login");
+                }
+                else if(res.data.message === 'Update Successful'){
+                    alert(res.data.message);
+                    history.push('/');
                 }
             })
             .catch(err => {console.error(err)});
@@ -117,10 +124,19 @@ export default function Useraccount() {
             return;
         }
         else{
-            axios.post(serveraddress+"/api/updatepassword", {oldpassword: user.password, newpassword: user.newpassword}, { headers: {authorization: "Bearer " + accesstoken}})
+            axios.put(serveraddress+"/api/updatepassword", {oldpassword: user.password, newpassword: user.newpassword}, { headers: {authorization: "Bearer " + accesstoken}})
             .then(res => {
                 // console.log(res);
-                if(res.data.message === 'Current password Incorrect'){
+                if(res.data.message === 'jwt expired' || res.data.message === 'Access token required'){
+                    sessionStorage.removeItem("accesstoken");
+                    sessionStorage.removeItem("name");
+                    sessionStorage.removeItem("userid");
+                    sessionStorage.removeItem("role");
+                    alert("You have been logged out");
+                    setLoggedIn(false);
+                    history.push("/login");
+                }
+                else if(res.data.message === 'Current password Incorrect'){
                     alert(res.data.message);
                     setUser({
                         ...user,
@@ -133,11 +149,6 @@ export default function Useraccount() {
                 else if(res.data.message === 'Password updated successfully'){
                     alert(res.data.message);
                     history.push('/');
-                }
-                else if(res.data.message === 'jwt expired'){
-                    sessionStorage.removeItem("accesstoken");
-                    sessionStorage.removeItem("name");
-                    setLoggedIn(false);
                 }
             })
             .catch(err => {console.error(err)});

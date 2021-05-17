@@ -15,6 +15,7 @@ import Popper from '@material-ui/core/Popper';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
+import Divider from '@material-ui/core/Divider';
 import SearchIcon from '@material-ui/icons/Search';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
@@ -131,14 +132,14 @@ export default function Home() {
     e.preventDefault();
     setRemainingBlogList(false);
     axios
-    .post(serveraddress+"/api/getblogwithtype", {type: e.target.name})
+    .get(serveraddress+"/api/getblogwithtype/" + e.target.name)
     .then((res) => {
       if(res.data.message === "No blogs found for this type"){
         alert("Sorry! " + res.data.message);
       }
       else {
         setBlogs(res.data.results);
-        setMyBlogButton(true);
+        setMyBlogButton(loggedIn && true);
       }
     })
     .catch(err => {
@@ -162,7 +163,11 @@ export default function Home() {
     .get(serveraddress+"/api/getuserblogs", { headers: {authorization: "Bearer " + accesstoken}})
     .then(res => {
       // console.log(res);
-      if(res.data.message === "No blogs found"){
+      if(res.data.message === "jwt expired" || res.data.message === 'Access token required'){
+        alert("You have been logged out. Please login again");
+        handleLogout(e);
+      }
+      else if(res.data.message === "No blogs found"){
         alert("Sorry! " + res.data.message);
       }
       else {
@@ -183,8 +188,14 @@ export default function Home() {
       .delete(serveraddress+"/api/softdeleteblog", { headers: {authorization: "Bearer " + accesstoken}, data: blogdata})
       .then(res => {
         // console.log(res);
-        alert(res.data.message);
-        setUpdated(!updated);
+        if(res.data.message === "jwt expired" || res.data.message === 'Access token required'){
+          alert("You have been logged out. Please login again");
+          handleLogout(e);
+        }
+        else{
+          alert(res.data.message);
+          setUpdated(!updated);
+        }
       })
       .catch(err => {
         console.error(err);
@@ -195,8 +206,14 @@ export default function Home() {
       .delete(serveraddress+"/api/harddeleteblog", { headers: {authorization: "Bearer " + accesstoken}, data: blogdata})
       .then(res => {
         // console.log(res);
-        alert(res.data.message);
-        setUpdated(!updated);
+        if(res.data.message === "jwt expired" || res.data.message === 'Access token required'){
+          alert("You have been logged out. Please login again");
+          handleLogout(e);
+        }
+        else{
+          alert(res.data.message);
+          setUpdated(!updated);
+        }
       })
       .catch(err => {
         console.error(err);
@@ -252,6 +269,7 @@ export default function Home() {
             variant="h3"
             align="center"
             className={classes.toolbarTitle}
+            onClick={() => history.push('/')}
         >
             BlogPoint
         </Typography>
@@ -281,6 +299,7 @@ export default function Home() {
         </IconButton>
         {remainingtypes}
       </Toolbar>
+      <Divider/>
       <Container className={classes.cardstack}>
         {
           blogs.map(blog => (
