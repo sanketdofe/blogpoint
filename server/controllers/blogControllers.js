@@ -1,18 +1,4 @@
-import dotenv from 'dotenv';
-import pkg from 'pg';
-const {Client} = pkg;
-
-dotenv.config();
-
-/////////////////////////////Database Connection////////////////////////
-const client = new Client({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_DATABASE,
-  password: process.env.DB_PASS,
-  port: process.env.DB_PORT
-});
-client.connect();
+import client from '../models/dbConnection.js';
 
 /////////////////////////////Controllers////////////////////////////////
 
