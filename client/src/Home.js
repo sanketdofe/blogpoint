@@ -22,7 +22,7 @@ import ExpandMore from '@material-ui/icons/ExpandMore';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 
-let serveraddress = "https://damp-brook-68868.herokuapp.com";
+let serveraddress = "http://localhost:5000";
 const useStyles = makeStyles((theme) => ({
   toolbar: {
     borderBottom: `1px solid ${theme.palette.divider}`,
@@ -90,7 +90,7 @@ export default function Home() {
     setAdmin(role === 'admin');
     setDeleteButton(false);
     axios
-    .get(serveraddress+"/api/getallblogs")
+    .get(serveraddress+"/api/blog/getallblogs")
     .then((res) => {
       if(res.data.message === "No blogs found"){
         alert("Sorry!" + res.data.message);
@@ -132,7 +132,7 @@ export default function Home() {
     e.preventDefault();
     setRemainingBlogList(false);
     axios
-    .get(serveraddress+"/api/getblogwithtype/" + e.target.name)
+    .get(serveraddress+"/api/blog/getblogwithtype/" + e.target.name)
     .then((res) => {
       if(res.data.message === "No blogs found for this type"){
         alert("Sorry! " + res.data.message);
@@ -160,7 +160,7 @@ export default function Home() {
   
   function handleMyBlogs(e){
     axios
-    .get(serveraddress+"/api/getuserblogs", { headers: {authorization: "Bearer " + accesstoken}})
+    .get(serveraddress+"/api/blog/getuserblogs", { headers: {authorization: "Bearer " + accesstoken}})
     .then(res => {
       // console.log(res);
       if(res.data.message === "jwt expired" || res.data.message === 'Access token required'){
@@ -185,7 +185,7 @@ export default function Home() {
     let blogdata = JSON.parse(e.currentTarget.value);
     if(e.currentTarget.name === 'soft'){
       axios
-      .delete(serveraddress+"/api/softdeleteblog", { headers: {authorization: "Bearer " + accesstoken}, data: blogdata})
+      .delete(serveraddress+"/api/blog/softdeleteblog", { headers: {authorization: "Bearer " + accesstoken}, data: blogdata})
       .then(res => {
         // console.log(res);
         if(res.data.message === "jwt expired" || res.data.message === 'Access token required'){
@@ -203,7 +203,7 @@ export default function Home() {
     }
     else if(e.currentTarget.name === 'hard'){
       axios
-      .delete(serveraddress+"/api/harddeleteblog", { headers: {authorization: "Bearer " + accesstoken}, data: blogdata})
+      .delete(serveraddress+"/api/blog/harddeleteblog", { headers: {authorization: "Bearer " + accesstoken}, data: blogdata})
       .then(res => {
         // console.log(res);
         if(res.data.message === "jwt expired" || res.data.message === 'Access token required'){

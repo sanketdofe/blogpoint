@@ -7,7 +7,7 @@ import FormControl from '@material-ui/core/FormControl';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom';
 
-let serveraddress = "https://damp-brook-68868.herokuapp.com";
+let serveraddress = "http://localhost:5000";
 const useStyles = makeStyles((theme) => ({
     root: {
         display: 'flex',
@@ -51,7 +51,7 @@ export default function Useraccount() {
             alert("Please login again");
             history.push("/login");
         }
-        axios.get(serveraddress+"/api/getuser", { headers: {authorization: "Bearer " + accesstoken}})
+        axios.get(serveraddress+"/api/user/getuser", { headers: {authorization: "Bearer " + accesstoken}})
         .then(res => {
             if(res.data.message === 'jwt expired' || res.data.message === 'Access token required'){
                 alert("You have been logged out");
@@ -88,7 +88,7 @@ export default function Useraccount() {
             alert("Name cannot be empty");
         }
         else{
-            axios.put(serveraddress+"/api/updateuser", {email: user.email, name: user.name}, { headers: {authorization: "Bearer " + accesstoken}})
+            axios.put(serveraddress+"/api/user/updateuser", {email: user.email, name: user.name}, { headers: {authorization: "Bearer " + accesstoken}})
             .then(res => {
                 // console.log(res);
                 if(res.data.message === 'jwt expired' || res.data.message === 'Access token required'){
@@ -124,7 +124,7 @@ export default function Useraccount() {
             return;
         }
         else{
-            axios.put(serveraddress+"/api/updatepassword", {oldpassword: user.password, newpassword: user.newpassword}, { headers: {authorization: "Bearer " + accesstoken}})
+            axios.put(serveraddress+"/api/user/updatepassword", {oldpassword: user.password, newpassword: user.newpassword}, { headers: {authorization: "Bearer " + accesstoken}})
             .then(res => {
                 // console.log(res);
                 if(res.data.message === 'jwt expired' || res.data.message === 'Access token required'){

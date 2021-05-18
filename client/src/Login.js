@@ -7,7 +7,7 @@ import FormControl from '@material-ui/core/FormControl';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom';
 
-let serveraddress = "https://damp-brook-68868.herokuapp.com";
+let serveraddress = "http://localhost:5000";
 const useStyles = makeStyles((theme) => ({
     root: {
         display: 'flex',
@@ -92,7 +92,7 @@ export default function Login(props) {
             return;
         }
         axios
-        .post(serveraddress+"/api/adduser", state)
+        .post(serveraddress+"/api/user/adduser", state)
         .then((res) => {
             if(res.data.message === "User with same email already exists"){
                 alert(res.data.message);
@@ -123,7 +123,7 @@ export default function Login(props) {
             role: state.role
         }
         axios
-        .post(serveraddress+"/api/authenticate", data)
+        .post(serveraddress+"/api/user/authenticate", data)
         .then((res) => {
             // console.log(res);
             if(res.data.message === "Your role does not qualify"){
